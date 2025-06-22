@@ -13,8 +13,13 @@ export default defineConfig({
       injectRegister: 'auto',
     })
   ],
-  test: {
-    globals: true,
-    environment: 'jsdom',
+  optimizeDeps: {
+    esbuildOptions: {
+      sourcemap: false
+    }
+  },
+  worker: {
+    rollupOptions: {
+    }
   }
 })

@@ -31,28 +31,16 @@ const extensions = [
 const Home: React.FC = () => {
   const editor = useEditor({
     extensions,
-    // editorProps: {
-    //   scrollThreshold: 500,
-    //   scrollMargin: 500,
-    // },
     onSelectionUpdate: ({ editor }) => {
       const { selection } = editor.state;
 
       const cursor = editor.view.coordsAtPos(selection.from);
 
-      setCursorTop(cursor.bottom);
-
       if (contentRef.current && window.visualViewport) {
-        // if (cursor.bottom > 400) {
-          // contentRef.current?.scrollByPoint(0, 100, 100);
-        // }
-
           const visualViewportHeight = window.visualViewport.height;
-
           const margin = visualViewportHeight * 0.2;
           if (cursor.top > visualViewportHeight - margin) {
             const scrollAmount = cursor.top - (visualViewportHeight - margin);
-
             contentRef.current?.scrollByPoint(0, scrollAmount, 100);
           }
         }
@@ -65,7 +53,6 @@ const Home: React.FC = () => {
   const [ viewportOffset, setViewportOffset ] = useState(0);
   const [ isKeyboardOpen, setIsKeyboardOpen ] = useState(false);
   const [ keyboardHeight, setKeyboardHeight ] = useState(0);
-  const [ cursorTop, setCursorTop ] = useState(0);
 
   useEffect(() => {
     editor?.commands.focus();
