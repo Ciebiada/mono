@@ -14,6 +14,14 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
+    exclude: [
+      '@tiptap/pm',
+      '@tiptap/core',
+      '@tiptap/extension-task-item',
+      '@tiptap/extension-task-list',
+      '@tiptap/react',
+      '@tiptap/starter-kit'
+    ],
     esbuildOptions: {
       sourcemap: false
     }
