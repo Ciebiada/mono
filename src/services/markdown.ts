@@ -4,147 +4,137 @@ type TipTapNode = {
   text?: string;
   attrs?: Record<string, any>;
   marks?: Array<{ type: string; attrs?: Record<string, any> }>;
-}
+};
 
 export type TipTapDocument = {
-  type: 'doc';
+  type: "doc";
   content: TipTapNode[];
-}
+};
 
 export const jsonToMarkdown = (json: TipTapDocument): string => {
-  if (!json.content) return '';
+  if (!json.content) return "";
 
   return json.content
-    .map(node => nodeToMarkdown(node))
-    .join('\n')
+    .map((node) => nodeToMarkdown(node))
+    .join("\n")
     .trim();
 };
 
 const nodeToMarkdown = (node: TipTapNode, listDepth = 0): string => {
   switch (node.type) {
-    case 'paragraph':
-      if (!node.content || node.content.length === 0) return '';
+    case "paragraph":
+      if (!node.content || node.content.length === 0) return "";
       const content = inlineContentToMarkdown(node.content);
-      return content.trim() === '' ? '' : content;
+      return content.trim() === "" ? "" : content;
 
-    case 'heading':
+    case "heading":
       const level = node.attrs?.level || 1;
-      const headingText = node.content ? inlineContentToMarkdown(node.content) : '';
-      return '#'.repeat(level) + ' ' + headingText;
+      const headingText = node.content ? inlineContentToMarkdown(node.content) : "";
+      return "#".repeat(level) + " " + headingText;
 
-    case 'bulletList':
-      return node.content
-        ?.map(item => listItemToMarkdown(item, '-', listDepth))
-        .join('\n') || '';
+    case "bulletList":
+      return node.content?.map((item) => listItemToMarkdown(item, "-", listDepth)).join("\n") || "";
 
-    case 'orderedList':
-      return node.content
-        ?.map((item, index) => listItemToMarkdown(item, `${index + 1}.`, listDepth))
-        .join('\n') || '';
+    case "orderedList":
+      return node.content?.map((item, index) => listItemToMarkdown(item, `${index + 1}.`, listDepth)).join("\n") || "";
 
-    case 'taskList':
-      return node.content
-        ?.map(item => taskItemToMarkdown(item, listDepth))
-        .join('\n') || '';
+    case "taskList":
+      return node.content?.map((item) => taskItemToMarkdown(item, listDepth)).join("\n") || "";
 
-    case 'codeBlock':
-      const language = node.attrs?.language || '';
-      const codeContent = node.content?.[0]?.text || '';
+    case "codeBlock":
+      const language = node.attrs?.language || "";
+      const codeContent = node.content?.[0]?.text || "";
       return `\`\`\`${language}\n${codeContent}\n\`\`\``;
 
-    case 'blockquote':
-      return node.content
-        ?.map(child => '> ' + nodeToMarkdown(child, listDepth))
-        .join('\n> ') || '';
+    case "blockquote":
+      return node.content?.map((child) => "> " + nodeToMarkdown(child, listDepth)).join("\n> ") || "";
 
-    case 'hardBreak':
-      return '  \n';
+    case "hardBreak":
+      return "  \n";
 
-    case 'horizontalRule':
-      return '---';
+    case "horizontalRule":
+      return "---";
 
     default:
-      return node.content
-        ?.map(child => nodeToMarkdown(child, listDepth))
-        .join('') || '';
+      return node.content?.map((child) => nodeToMarkdown(child, listDepth)).join("") || "";
   }
 };
 
 const listItemToMarkdown = (item: TipTapNode, marker: string, depth: number): string => {
-  const indent = '  '.repeat(depth);
-  const content = item.content
-    ?.map(child => nodeToMarkdown(child, depth + 1))
-    .join('\n') || '';
+  const indent = "  ".repeat(depth);
+  const content = item.content?.map((child) => nodeToMarkdown(child, depth + 1)).join("\n") || "";
 
-  const lines = content.split('\n');
-  const firstLine = `${indent}${marker} ${lines[0] || ''}`;
-  const restLines = lines.slice(1).map(line =>
-    line ? `${indent}  ${line}` : ''
-  ).join('\n');
+  const lines = content.split("\n");
+  const firstLine = `${indent}${marker} ${lines[0] || ""}`;
+  const restLines = lines
+    .slice(1)
+    .map((line) => (line ? `${indent}  ${line}` : ""))
+    .join("\n");
 
   return restLines ? `${firstLine}\n${restLines}` : firstLine;
 };
 
 const taskItemToMarkdown = (item: TipTapNode, depth: number): string => {
-  const indent = '  '.repeat(depth);
+  const indent = "  ".repeat(depth);
   const checked = item.attrs?.checked || false;
-  const checkbox = checked ? '[x]' : '[ ]';
+  const checkbox = checked ? "[x]" : "[ ]";
 
-  const content = item.content
-    ?.map(child => nodeToMarkdown(child, depth + 1))
-    .join('\n') || '';
+  const content = item.content?.map((child) => nodeToMarkdown(child, depth + 1)).join("\n") || "";
 
-  const lines = content.split('\n');
-  const firstLine = `${indent}- ${checkbox} ${lines[0] || ''}`;
-  const restLines = lines.slice(1).map(line =>
-    line ? `${indent}  ${line}` : ''
-  ).join('\n');
+  const lines = content.split("\n");
+  const firstLine = `${indent}- ${checkbox} ${lines[0] || ""}`;
+  const restLines = lines
+    .slice(1)
+    .map((line) => (line ? `${indent}  ${line}` : ""))
+    .join("\n");
 
   return restLines ? `${firstLine}\n${restLines}` : firstLine;
 };
 
 const inlineContentToMarkdown = (content: TipTapNode[]): string => {
-  return content.map(node => {
-    if (node.type === 'text') {
-      let text = node.text || '';
+  return content
+    .map((node) => {
+      if (node.type === "text") {
+        let text = node.text || "";
 
-      if (node.marks) {
-        for (const mark of node.marks) {
-          switch (mark.type) {
-            case 'bold':
-              text = `**${text}**`;
-              break;
-            case 'italic':
-              text = `*${text}*`;
-              break;
-            case 'code':
-              text = `\`${text}\``;
-              break;
-            case 'strike':
-              text = `~~${text}~~`;
-              break;
-            case 'link':
-              const href = mark.attrs?.href || '';
-              text = `[${text}](${href})`;
-              break;
+        if (node.marks) {
+          for (const mark of node.marks) {
+            switch (mark.type) {
+              case "bold":
+                text = `**${text}**`;
+                break;
+              case "italic":
+                text = `*${text}*`;
+                break;
+              case "code":
+                text = `\`${text}\``;
+                break;
+              case "strike":
+                text = `~~${text}~~`;
+                break;
+              case "link":
+                const href = mark.attrs?.href || "";
+                text = `[${text}](${href})`;
+                break;
+            }
           }
         }
+
+        return text;
       }
 
-      return text;
-    }
-
-    return nodeToMarkdown(node);
-  }).join('');
+      return nodeToMarkdown(node);
+    })
+    .join("");
 };
 
 export const markdownToJson = (markdown: string): TipTapDocument => {
   // Ensure markdown is a string
-  if (typeof markdown !== 'string') {
-    markdown = '';
+  if (typeof markdown !== "string") {
+    markdown = "";
   }
 
-  const lines = markdown.split('\n');
+  const lines = markdown.split("\n");
   const content: TipTapNode[] = [];
   let i = 0;
 
@@ -152,9 +142,9 @@ export const markdownToJson = (markdown: string): TipTapDocument => {
     const line = lines[i];
 
     // Handle empty lines as empty paragraphs
-    if (line.trim() === '') {
+    if (line.trim() === "") {
       content.push({
-        type: 'paragraph'
+        type: "paragraph",
       });
       i++;
       continue;
@@ -164,9 +154,9 @@ export const markdownToJson = (markdown: string): TipTapDocument => {
     const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
     if (headingMatch) {
       content.push({
-        type: 'heading',
+        type: "heading",
         attrs: { level: headingMatch[1].length },
-        content: parseInlineContent(headingMatch[2])
+        content: parseInlineContent(headingMatch[2]),
       });
       i++;
       continue;
@@ -185,9 +175,9 @@ export const markdownToJson = (markdown: string): TipTapDocument => {
       }
 
       content.push({
-        type: 'codeBlock',
+        type: "codeBlock",
         attrs: language ? { language } : {},
-        content: [{ type: 'text', text: codeLines.join('\n') }]
+        content: [{ type: "text", text: codeLines.join("\n") }],
       });
       i++; // Skip closing ```
       continue;
@@ -221,7 +211,7 @@ export const markdownToJson = (markdown: string): TipTapDocument => {
     }
 
     // Blockquotes
-    if (line.startsWith('> ')) {
+    if (line.startsWith("> ")) {
       const [blockquote, nextIndex] = parseBlockquote(lines, i);
       content.push(blockquote);
       i = nextIndex;
@@ -230,7 +220,7 @@ export const markdownToJson = (markdown: string): TipTapDocument => {
 
     // Horizontal rules
     if (line.match(/^(-{3,}|\*{3,}|_{3,})\s*$/)) {
-      content.push({ type: 'horizontalRule' });
+      content.push({ type: "horizontalRule" });
       i++;
       continue;
     }
@@ -239,14 +229,14 @@ export const markdownToJson = (markdown: string): TipTapDocument => {
     const paragraphContent = parseInlineContent(line);
     if (paragraphContent.length > 0) {
       content.push({
-        type: 'paragraph',
-        content: paragraphContent
+        type: "paragraph",
+        content: paragraphContent,
       });
     }
     i++;
   }
 
-  return { type: 'doc', content };
+  return { type: "doc", content };
 };
 
 const parseTaskList = (lines: string[], startIndex: number): [TipTapNode, number] => {
@@ -256,7 +246,7 @@ const parseTaskList = (lines: string[], startIndex: number): [TipTapNode, number
   // Get the base indentation level from the first task item
   const firstLine = lines[startIndex];
   const firstMatch = firstLine.match(/^(\s*)- \[([ x])\]\s*(.*)$/);
-  if (!firstMatch) return [{ type: 'taskList', content: [] }, startIndex + 1];
+  if (!firstMatch) return [{ type: "taskList", content: [] }, startIndex + 1];
 
   const baseIndentLevel = firstMatch[1].length;
 
@@ -277,18 +267,18 @@ const parseTaskList = (lines: string[], startIndex: number): [TipTapNode, number
       continue;
     }
 
-    const checked = taskMatch[2] === 'x';
+    const checked = taskMatch[2] === "x";
     const text = taskMatch[3];
 
     const taskItem: TipTapNode = {
-      type: 'taskItem',
+      type: "taskItem",
       attrs: { checked },
       content: [
         {
-          type: 'paragraph',
-          content: parseInlineContent(text)
-        }
-      ]
+          type: "paragraph",
+          content: parseInlineContent(text),
+        },
+      ],
     };
 
     i++;
@@ -300,7 +290,7 @@ const parseTaskList = (lines: string[], startIndex: number): [TipTapNode, number
       const nextLine = lines[i];
 
       // Empty line - skip but continue looking for nested content
-      if (nextLine.trim() === '') {
+      if (nextLine.trim() === "") {
         i++;
         continue;
       }
@@ -344,7 +334,7 @@ const parseTaskList = (lines: string[], startIndex: number): [TipTapNode, number
     items.push(taskItem);
   }
 
-  return [{ type: 'taskList', content: items }, i];
+  return [{ type: "taskList", content: items }, i];
 };
 
 const parseBulletList = (lines: string[], startIndex: number): [TipTapNode, number] => {
@@ -354,7 +344,7 @@ const parseBulletList = (lines: string[], startIndex: number): [TipTapNode, numb
   // Get the base indentation level from the first bullet item
   const firstLine = lines[startIndex];
   const firstMatch = firstLine.match(/^(\s*)[-*+]\s+(.*)$/);
-  if (!firstMatch) return [{ type: 'bulletList', content: [] }, startIndex + 1];
+  if (!firstMatch) return [{ type: "bulletList", content: [] }, startIndex + 1];
 
   const baseIndentLevel = firstMatch[1].length;
 
@@ -378,13 +368,13 @@ const parseBulletList = (lines: string[], startIndex: number): [TipTapNode, numb
     const text = bulletMatch[2];
 
     const listItem: TipTapNode = {
-      type: 'listItem',
+      type: "listItem",
       content: [
         {
-          type: 'paragraph',
-          content: parseInlineContent(text)
-        }
-      ]
+          type: "paragraph",
+          content: parseInlineContent(text),
+        },
+      ],
     };
 
     i++;
@@ -396,7 +386,7 @@ const parseBulletList = (lines: string[], startIndex: number): [TipTapNode, numb
       const nextLine = lines[i];
 
       // Empty line - skip but continue looking for nested content
-      if (nextLine.trim() === '') {
+      if (nextLine.trim() === "") {
         i++;
         continue;
       }
@@ -440,7 +430,7 @@ const parseBulletList = (lines: string[], startIndex: number): [TipTapNode, numb
     items.push(listItem);
   }
 
-  return [{ type: 'bulletList', content: items }, i];
+  return [{ type: "bulletList", content: items }, i];
 };
 
 const parseOrderedList = (lines: string[], startIndex: number): [TipTapNode, number] => {
@@ -450,7 +440,7 @@ const parseOrderedList = (lines: string[], startIndex: number): [TipTapNode, num
   // Get the base indentation level from the first ordered item
   const firstLine = lines[startIndex];
   const firstMatch = firstLine.match(/^(\s*)\d+\.\s+(.*)$/);
-  if (!firstMatch) return [{ type: 'orderedList', content: [] }, startIndex + 1];
+  if (!firstMatch) return [{ type: "orderedList", content: [] }, startIndex + 1];
 
   const baseIndentLevel = firstMatch[1].length;
 
@@ -474,13 +464,13 @@ const parseOrderedList = (lines: string[], startIndex: number): [TipTapNode, num
     const text = orderedMatch[2];
 
     const listItem: TipTapNode = {
-      type: 'listItem',
+      type: "listItem",
       content: [
         {
-          type: 'paragraph',
-          content: parseInlineContent(text)
-        }
-      ]
+          type: "paragraph",
+          content: parseInlineContent(text),
+        },
+      ],
     };
 
     i++;
@@ -492,7 +482,7 @@ const parseOrderedList = (lines: string[], startIndex: number): [TipTapNode, num
       const nextLine = lines[i];
 
       // Empty line - skip but continue looking for nested content
-      if (nextLine.trim() === '') {
+      if (nextLine.trim() === "") {
         i++;
         continue;
       }
@@ -536,23 +526,23 @@ const parseOrderedList = (lines: string[], startIndex: number): [TipTapNode, num
     items.push(listItem);
   }
 
-  return [{ type: 'orderedList', content: items }, i];
+  return [{ type: "orderedList", content: items }, i];
 };
 
 const parseBlockquote = (lines: string[], startIndex: number): [TipTapNode, number] => {
   const content: TipTapNode[] = [];
   let i = startIndex;
 
-  while (i < lines.length && lines[i].startsWith('> ')) {
+  while (i < lines.length && lines[i].startsWith("> ")) {
     const text = lines[i].substring(2);
     content.push({
-      type: 'paragraph',
-      content: parseInlineContent(text)
+      type: "paragraph",
+      content: parseInlineContent(text),
     });
     i++;
   }
 
-  return [{ type: 'blockquote', content }, i];
+  return [{ type: "blockquote", content }, i];
 };
 
 const parseInlineContent = (text: string): TipTapNode[] => {
@@ -563,11 +553,11 @@ const parseInlineContent = (text: string): TipTapNode[] => {
 
   // Patterns for inline formatting (order matters - more specific first)
   const patterns = [
-    { regex: /\*\*([^*]+)\*\*/g, mark: 'bold' },
-    { regex: /\*([^*]+)\*/g, mark: 'italic' },
-    { regex: /`([^`]+)`/g, mark: 'code' },
-    { regex: /~~([^~]+)~~/g, mark: 'strike' },
-    { regex: /\[([^\]]+)\]\(([^)]+)\)/g, mark: 'link' }
+    { regex: /\*\*([^*]+)\*\*/g, mark: "bold" },
+    { regex: /\*([^*]+)\*/g, mark: "italic" },
+    { regex: /`([^`]+)`/g, mark: "code" },
+    { regex: /~~([^~]+)~~/g, mark: "strike" },
+    { regex: /\[([^\]]+)\]\(([^)]+)\)/g, mark: "link" },
   ];
 
   const matches: Array<{ start: number; end: number; text: string; mark: string; attrs?: any }> = [];
@@ -582,25 +572,23 @@ const parseInlineContent = (text: string): TipTapNode[] => {
       const end = match.index + match[0].length;
 
       // Check if this match overlaps with existing matches
-      const overlaps = matches.some(existing =>
-        (start < existing.end && end > existing.start)
-      );
+      const overlaps = matches.some((existing) => start < existing.end && end > existing.start);
 
       if (!overlaps) {
-        if (pattern.mark === 'link') {
+        if (pattern.mark === "link") {
           matches.push({
             start,
             end,
             text: match[1], // Link text
             mark: pattern.mark,
-            attrs: { href: match[2] } // Link URL
+            attrs: { href: match[2] }, // Link URL
           });
         } else {
           matches.push({
             start,
             end,
             text: match[1], // Content inside formatting
-            mark: pattern.mark
+            mark: pattern.mark,
           });
         }
       }
@@ -616,7 +604,7 @@ const parseInlineContent = (text: string): TipTapNode[] => {
     if (match.start > currentIndex) {
       const beforeText = text.substring(currentIndex, match.start);
       if (beforeText) {
-        nodes.push({ type: 'text', text: beforeText });
+        nodes.push({ type: "text", text: beforeText });
       }
     }
 
@@ -627,9 +615,9 @@ const parseInlineContent = (text: string): TipTapNode[] => {
     }
 
     nodes.push({
-      type: 'text',
+      type: "text",
       text: match.text,
-      marks: [markObj]
+      marks: [markObj],
     });
 
     currentIndex = match.end;
@@ -639,13 +627,13 @@ const parseInlineContent = (text: string): TipTapNode[] => {
   if (currentIndex < text.length) {
     const remainingText = text.substring(currentIndex);
     if (remainingText) {
-      nodes.push({ type: 'text', text: remainingText });
+      nodes.push({ type: "text", text: remainingText });
     }
   }
 
   // If no formatting was found, just return the plain text
   if (nodes.length === 0 && text.trim()) {
-    nodes.push({ type: 'text', text });
+    nodes.push({ type: "text", text });
   }
 
   return nodes;

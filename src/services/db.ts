@@ -18,11 +18,9 @@ export const db = new Dexie("Mono") as Dexie & {
 };
 
 db.version(1).stores({
-  notes:
-    "++id, content, name, cursor, lastModified, lastOpened, dropboxId, syncStatus, lastSyncedAt",
+  notes: "++id, content, name, cursor, lastModified, lastOpened, dropboxId, syncStatus, lastSyncedAt",
 });
 
 db.version(2).stores({
-  notes:
-    "++id, content, &name, cursor, lastModified, lastOpened, dropboxId, syncStatus, lastSyncedAt",
+  notes: "++id, content, &name, cursor, lastModified, lastOpened, dropboxId, syncStatus, lastSyncedAt",
 });

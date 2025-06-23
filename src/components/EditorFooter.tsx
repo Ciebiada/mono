@@ -59,10 +59,7 @@ export const EditorFooter = ({ editor }: EditorFooterProps) => {
               breakpoints={[0.3, 0.6]}
             >
               <IonContent className="ion-padding">
-                <IonSearchbar
-                  ref={searchbar}
-                  placeholder="Search"
-                ></IonSearchbar>
+                <IonSearchbar ref={searchbar} placeholder="Search"></IonSearchbar>
                 <IonList>
                   <IonItem>
                     <IonAvatar slot="start">

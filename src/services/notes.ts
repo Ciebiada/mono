@@ -9,15 +9,11 @@ export const createNewNote = async (name: string) => {
     syncStatus: "pending",
   });
 
-  return await db.notes.get(id) as Note;
+  return (await db.notes.get(id)) as Note;
 };
 
 export const findLastOpenedNote = async () => {
-  const notes = await db.notes
-    .where("syncStatus")
-    .notEqual("pending-delete")
-    .reverse()
-    .sortBy("lastOpened");
+  const notes = await db.notes.where("syncStatus").notEqual("pending-delete").reverse().sortBy("lastOpened");
 
   return notes[0];
 };
@@ -32,10 +28,8 @@ export const touchNote = async (noteId: number) => {
   });
 };
 
-export const updateNote = async (noteId: number, updates: Partial<Omit<Note, 'id'>>) => {
-  const filteredUpdates = Object.fromEntries(
-    Object.entries(updates).filter(([_, value]) => value !== undefined)
-  );
+export const updateNote = async (noteId: number, updates: Partial<Omit<Note, "id">>) => {
+  const filteredUpdates = Object.fromEntries(Object.entries(updates).filter(([_, value]) => value !== undefined));
 
   await db.notes.update(noteId, {
     ...filteredUpdates,
