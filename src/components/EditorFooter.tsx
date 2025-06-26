@@ -14,8 +14,11 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { search } from "ionicons/icons";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
+import { getAllNotesSorted } from "../services/notes";
+import { Note } from "../services/db";
+import { useLiveQuery } from "dexie-react-hooks";
 
 type EditorFooterProps = {
   editor: Editor;
@@ -24,6 +27,9 @@ type EditorFooterProps = {
 export const EditorFooter = ({ editor }: EditorFooterProps) => {
   const modal = useRef<HTMLIonModalElement>(null);
   const searchbar = useRef<HTMLIonSearchbarElement>(null);
+  const notes = useLiveQuery(async () => {
+    return getAllNotesSorted();
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -59,7 +65,7 @@ export const EditorFooter = ({ editor }: EditorFooterProps) => {
               breakpoints={[0.3, 0.6]}
             >
               <IonContent className="ion-padding">
-                <IonSearchbar ref={searchbar} placeholder="Search"></IonSearchbar>
+                <IonSearchbar ref={searchbar} inputmode="search"></IonSearchbar>
                 <IonList>
                   <IonItem>
                     <IonAvatar slot="start">

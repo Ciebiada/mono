@@ -1,5 +1,5 @@
 import { useHistory } from "react-router-dom";
-import { createNewNote, findLastOpenedNote } from "../services/notes";
+import { createNewNote, getAllNotesSorted } from "../services/notes";
 import { useEffect } from "react";
 
 export const StartupRedirect = () => {
@@ -7,7 +7,8 @@ export const StartupRedirect = () => {
 
   useEffect(() => {
     const findOrCreateNote = async () => {
-      const note = await findLastOpenedNote();
+      const notes = await getAllNotesSorted();
+      const note = notes[0];
 
       if (note) {
         return note;

@@ -12,11 +12,9 @@ export const createNewNote = async (name: string) => {
   return (await db.notes.get(id)) as Note;
 };
 
-export const findLastOpenedNote = async () => {
-  const notes = await db.notes.where("syncStatus").notEqual("pending-delete").reverse().sortBy("lastOpened");
-
-  return notes[0];
-};
+export const getAllNotesSorted = async () => {
+  return await db.notes.where("syncStatus").notEqual("pending-delete").reverse().sortBy("lastOpened");
+}
 
 export const findNoteByName = async (name: string) => {
   return await db.notes.where("name").equals(name).first();
