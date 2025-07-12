@@ -1,9 +1,9 @@
-import { Redirect, Route } from "react-router-dom";
+import { BrowserRouter, Redirect, Route, Router } from "react-router-dom";
 import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
-import { Home } from "./pages/Home";
-import { StartupRedirect } from "./pages/StartupRedirect";
 import { ErrorPage } from "./pages/Error";
+import { Note } from "./pages/Note";
+import { LastOpenedNote } from "./pages/LastOpenedNote";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -41,12 +41,8 @@ export const App = () => (
   <IonApp>
     <IonReactRouter>
       <IonRouterOutlet>
-        <Route path="/notes/:name">
-          <Home />
-        </Route>
-        <Route exact path="/">
-          <StartupRedirect />
-        </Route>
+        <Route path="/notes/:name" component={Note} />
+        <Route exact path="/" component={LastOpenedNote} />
         <Route path="/error">
           <ErrorPage />
         </Route>

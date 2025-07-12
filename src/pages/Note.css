@@ -1,0 +1,120 @@
+.tiptap {
+  white-space: pre-wrap;
+  outline: none;
+  min-height: 100dvh;
+  padding-bottom: var(--tiptap-padding-bottom);
+
+  p {
+    margin: 8px 0;
+  }
+
+  /* Placeholder styles */
+  p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  /* Horizontal rule styles */
+  hr {
+    border-top: 1px solid var(--ion-color-light-tint);
+    margin: 1rem 0;
+  }
+
+
+  /* List styles */
+  ul, ol {
+    padding-left: 32px;
+  }
+
+  li {
+    padding-left: 8px;
+  }
+
+  ul[data-type="taskList"] {
+    list-style: none;
+
+    li {
+      position: relative;
+
+      input[type="checkbox"] {
+        position: absolute;
+        margin: 0;
+        appearance: none;
+        width: 36px;
+        height: 36px;
+        top: -7px;
+        left: -32px;
+
+        cursor: pointer;
+
+        display: grid;
+        place-content: center;
+
+        /* Firefox-specific adjustment */
+        @-moz-document url-prefix() {
+          left: -29px;
+        }
+      }
+
+      input[type="checkbox"]::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--ion-color-medium-shade);
+        border-radius: 100%;
+        transition: all 150ms ease-out;
+      }
+
+      input[type="checkbox"]:hover::before {
+        border-color: var(--ion-color-primary);
+        background: var(--ion-color-light);
+      }
+
+      input[type="checkbox"]:checked::before {
+        border-color: var(--ion-color-primary-tint);
+        background: var(--ion-color-primary);
+      }
+
+      input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.1 12.7L9 17.6 20.3 6.3' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") no-repeat center;
+        background-size: contain;
+      }
+
+      div {
+        display: inline;
+      }
+    }
+
+    /* Strike-through text when checkbox is checked */
+    li[data-checked="true"] > div > p {
+      text-decoration: line-through;
+      color: var(--ion-color-medium);
+    }
+  }
+}
+
+ion-title {
+  input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    text-align: inherit;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+}

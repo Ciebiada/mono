@@ -1,42 +1,61 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from "@ionic/react";
-import "./Home.css";
+import { IonActionSheet, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, useIonRouter } from "@ionic/react";
 import { useRef, useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
-import { StarterKit } from "@tiptap/starter-kit";
-import { Placeholder } from "@tiptap/extensions";
-import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import { EditorFooter } from "../components/EditorFooter";
-import { findNoteByName, touchNote, updateNote } from "../services/notes";
+import { deleteNote, findNoteByName, touchNote, updateNote } from "../services/notes";
 import { debounce } from "../services/debounce";
-import { Note } from "../services/db";
+import { Note as NoteType } from "../services/db";
+import { Editor, EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Placeholder } from "@tiptap/extensions";
+import "./Note.css";
+import { ellipsisHorizontalCircle } from "ionicons/icons";
+import TaskList from "@tiptap/extension-task-list";
+import { TabHandler } from "../services/TabHandler";
+import { TaskItem } from "../services/TaskItem";
 
-const extensions = [StarterKit, Placeholder.configure({ placeholder: "Write your note here..." })];
+const extensions = [
+  StarterKit,
+  TaskList,
+  TaskItem.configure({ nested: true }),
+  Placeholder.configure({ placeholder: "Write your note here..." }),
+  TabHandler,
+];
 
-const saveNoteContent = debounce(async (editor: Editor, noteId: Note["id"]) => {
-  const content = editor.getJSON();
+const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
+  await updateNote(noteId, { name });
+  window.history.replaceState(null, "", `/notes/${encodeURIComponent(name)}`);
+}, 500);
+
+const saveNoteContent = debounce(async (editor: Editor, noteId: NoteType["id"]) => {
+  const content = editor.getJSON()
   await updateNote(noteId, { content });
 }, 500);
 
-const saveNoteCursor = debounce(async (editor: Editor, noteId: Note["id"]) => {
+const saveNoteCursor = debounce(async (editor: Editor, noteId: NoteType["id"]) => {
   return await updateNote(noteId, {
     cursor: editor.state.selection.anchor,
   });
 }, 500);
 
-const saveNoteName = debounce(async (noteId: Note["id"], name: string) => {
-  await updateNote(noteId, { name });
-  window.history.replaceState(null, "", `/notes/${encodeURIComponent(name)}`);
-}, 500);
-
-export const Home = () => {
-  const { name: nameParam } = useParams<{ name: string }>();
+export const Note = () => {
   const history = useHistory();
+  const router = useIonRouter();
+  const { name: nameParam } = useParams<{ name: string }>();
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  const headerRef = useRef<HTMLIonHeaderElement>(null);
+  const [note, setNote] = useState<NoteType>();
+  const [name, setName] = useState<NoteType["name"]>(nameParam);
+  const [viewportOffset, setViewportOffset] = useState(0);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
   const editor = useEditor({
     extensions,
-    onSelectionUpdate: ({ editor }) => {
-      const cursor = editor.view.coordsAtPos(editor.state.selection.from);
-
+    onSelectionUpdate: ({ editor, transaction }) => {
+      // Keep cursor in view
       if (contentRef.current && headerRef.current && window.visualViewport) {
+        const cursor = editor.view.coordsAtPos(editor.state.selection.from);
         const visualViewportHeight = window.visualViewport.height;
         const bottomMargin = visualViewportHeight * 0.2;
         if (cursor.top > visualViewportHeight - bottomMargin) {
@@ -48,7 +67,7 @@ export const Home = () => {
         }
       }
 
-      if (note) {
+      if (note && !transaction.getMeta('preventUpdate')) {
         saveNoteCursor(editor, note.id);
       }
     },
@@ -57,22 +76,17 @@ export const Home = () => {
         saveNoteContent(editor, note.id);
       }
     },
+    onFocus: ({ editor, event }) => {
+    }
   });
-  const contentRef = useRef<HTMLIonContentElement>(null);
-  const headerRef = useRef<HTMLIonHeaderElement>(null);
-  const [viewportOffset, setViewportOffset] = useState(0);
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [note, setNote] = useState<Note | null>(null);
-  const [name, setName] = useState<Note["name"]>(nameParam);
 
   useEffect(() => {
     const findNote = async () => {
-      const note = await findNoteByName(nameParam);
+      const foundNote = await findNoteByName(nameParam);
 
-      if (note) {
-        setNote(note);
-        setName(note.name);
+      if (foundNote) {
+        setNote(foundNote);
+        setName(foundNote.name);
       } else {
         history.push("/error");
       }
@@ -94,6 +108,14 @@ export const Home = () => {
     }
   }, [editor, note]);
 
+  const handleNameChange = (value: string) => {
+    setName(value);
+    if (note) {
+      saveNoteName(note.id, value);
+    }
+  };
+
+  // TODO: extract to a keyboard hook
   useEffect(() => {
     const handleViewportChange = () => {
       if (window.visualViewport) {
@@ -118,18 +140,8 @@ export const Home = () => {
     }
   }, []);
 
-  const handleNameChange = (value: string) => {
-    setName(value);
-    if (note) {
-      saveNoteName(note.id, value);
-    }
-  };
-
   return (
     <IonPage>
-      {/* <div style={{ position: 'absolute', zIndex: 100, top: viewportOffset - 40, width: '100%', height: 40, backgroundColor: 'red' }}>
-        {window?.visualViewport?.height} {window?.innerHeight}
-      </div> */}
       <IonHeader ref={headerRef} translucent>
         <IonToolbar>
           <IonTitle>
@@ -140,6 +152,11 @@ export const Home = () => {
               onChange={(e) => handleNameChange(e.target.value)}
             />
           </IonTitle>
+          <IonButtons collapse={true} slot="end">
+            <IonButton onClick={() => setShowMenu(true)}>
+              <IonIcon slot="icon-only" icon={ellipsisHorizontalCircle} />
+            </IonButton>
+          </IonButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent ref={contentRef} fullscreen>
@@ -153,8 +170,40 @@ export const Home = () => {
                 onChange={(e) => handleNameChange(e.target.value)}
               />
             </IonTitle>
+            <IonButtons collapse={true} slot="end">
+              <IonButton onClick={() => setShowMenu(true)}>
+                <IonIcon slot="icon-only" icon={ellipsisHorizontalCircle} />
+              </IonButton>
+            </IonButtons>
           </IonToolbar>
         </IonHeader>
+        <IonActionSheet
+          isOpen={showMenu}
+          onDidDismiss={({ detail }) => {
+            if (note && detail.data?.action === "delete") {
+              deleteNote(note)
+              router.push("/");
+            }
+            setShowMenu(false);
+          }}
+          header="Note actions"
+          buttons={[
+            {
+              text: "Delete",
+              role: "destructive",
+              data: {
+                action: "delete",
+              },
+            },
+            {
+              text: "Cancel",
+              role: "cancel",
+              data: {
+                action: "cancel",
+              },
+            },
+          ]}
+        />
         <div
           className="ion-padding"
           style={
@@ -166,7 +215,7 @@ export const Home = () => {
           <EditorContent editor={editor} />
         </div>
       </IonContent>
-      <EditorFooter editor={editor} />
+      {editor && <EditorFooter currentNoteId={note?.id} editor={editor} />}
     </IonPage>
   );
 };

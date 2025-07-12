@@ -14,7 +14,7 @@ export const createNewNote = async (name: string) => {
 
 export const getAllNotesSorted = async () => {
   return await db.notes.where("syncStatus").notEqual("pending-delete").reverse().sortBy("lastOpened");
-}
+};
 
 export const findNoteByName = async (name: string) => {
   return await db.notes.where("name").equals(name).first();
@@ -33,4 +33,12 @@ export const updateNote = async (noteId: number, updates: Partial<Omit<Note, "id
     ...filteredUpdates,
     lastModified: Date.now(),
   });
+};
+
+export const deleteNote = async (note: Note) => {
+  if (note.dropboxId === undefined) {
+    await db.notes.delete(note.id);
+  } else {
+    await db.notes.update(note.id, { syncStatus: "pending-delete" });
+  }
 };

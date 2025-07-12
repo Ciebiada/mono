@@ -559,7 +559,6 @@ const parseInlineContent = (text: string): TipTapNode[] => {
     { regex: /~~([^~]+)~~/g, mark: "strike" },
     { regex: /\[([^\]]+)\]\(([^)]+)\)/g, mark: "link" },
   ];
-
   const matches: Array<{ start: number; end: number; text: string; mark: string; attrs?: any }> = [];
 
   // Find all matches
@@ -649,3 +648,4 @@ export const setEditorFromMarkdown = (editor: any, markdown: string): void => {
   const json = markdownToJson(markdown);
   editor.commands.setContent(json, { emitUpdate: false });
 };
+

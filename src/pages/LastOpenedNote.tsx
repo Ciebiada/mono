@@ -2,7 +2,7 @@ import { useHistory } from "react-router-dom";
 import { createNewNote, getAllNotesSorted } from "../services/notes";
 import { useEffect } from "react";
 
-export const StartupRedirect = () => {
+export const LastOpenedNote = () => {
   const history = useHistory();
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export const StartupRedirect = () => {
     const redirect = async () => {
       const note = await findOrCreateNote();
       const encodedName = encodeURIComponent(note.name);
-      history.push(`/notes/${encodedName}`);
+      history.replace(`/notes/${encodedName}`);
     };
 
     redirect();
