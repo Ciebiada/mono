@@ -4,6 +4,7 @@ import { IonReactRouter } from "@ionic/react-router";
 import { ErrorPage } from "./pages/Error";
 import { Note } from "./pages/Note";
 import { LastOpenedNote } from "./pages/LastOpenedNote";
+import { OAuthCallback } from "./pages/OAuthCallback";
 
 /* Core CSS required for Ionic components to work properly */
 import "@ionic/react/css/core.css";
@@ -43,6 +44,7 @@ export const App = () => (
       <IonRouterOutlet>
         <Route path="/notes/:name" component={Note} />
         <Route exact path="/" component={LastOpenedNote} />
+        <Route path="/oauth-callback" component={OAuthCallback} />
         <Route path="/error">
           <ErrorPage />
         </Route>

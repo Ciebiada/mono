@@ -20,6 +20,10 @@ export const findNoteByName = async (name: string) => {
   return await db.notes.where("name").equals(name).first();
 };
 
+export const getNoteById = async (noteId: number) => {
+  return await db.notes.get(noteId);
+};
+
 export const touchNote = async (noteId: number) => {
   await db.notes.update(noteId, {
     lastOpened: Date.now(),
@@ -35,10 +39,14 @@ export const updateNote = async (noteId: number, updates: Partial<Omit<Note, "id
   });
 };
 
-export const deleteNote = async (note: Note) => {
-  if (note.dropboxId === undefined) {
-    await db.notes.delete(note.id);
-  } else {
-    await db.notes.update(note.id, { syncStatus: "pending-delete" });
+export const deleteNote = async (noteId: Note['id']) => {
+  const note = await db.notes.get(noteId);
+
+  if (note) {
+    if (note?.dropboxId === undefined) {
+      await db.notes.delete(note.id);
+    } else {
+      await db.notes.update(note.id, { syncStatus: "pending-delete" });
+    }
   }
 };

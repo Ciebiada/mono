@@ -2,7 +2,7 @@ import { IonActionSheet, IonButton, IonButtons, IonContent, IonHeader, IonIcon, 
 import { useRef, useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { EditorFooter } from "../components/EditorFooter";
-import { deleteNote, findNoteByName, touchNote, updateNote } from "../services/notes";
+import { deleteNote, findNoteByName, getNoteById, touchNote, updateNote } from "../services/notes";
 import { debounce } from "../services/debounce";
 import { Note as NoteType } from "../services/db";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
@@ -13,6 +13,13 @@ import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
 import { TabHandler } from "../services/TabHandler";
 import { TaskItem } from "../services/TaskItem";
+import { getAuthUrl, initDropbox } from "../services/dropbox";
+import { syncAll, syncNote } from "../services/sync";
+
+const DROPBOX_CLIENT_ID = "vendb84lzmnzbq9";
+const DROPBOX_REDIRECT_PATH = "/oauth-callback";
+
+initDropbox(DROPBOX_CLIENT_ID, DROPBOX_REDIRECT_PATH);
 
 const extensions = [
   StarterKit,
@@ -30,6 +37,7 @@ const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
 const saveNoteContent = debounce(async (editor: Editor, noteId: NoteType["id"]) => {
   const content = editor.getJSON()
   await updateNote(noteId, { content });
+  await syncNote(noteId);
 }, 500);
 
 const saveNoteCursor = debounce(async (editor: Editor, noteId: NoteType["id"]) => {
@@ -40,11 +48,10 @@ const saveNoteCursor = debounce(async (editor: Editor, noteId: NoteType["id"]) =
 
 export const Note = () => {
   const history = useHistory();
-  const router = useIonRouter();
   const { name: nameParam } = useParams<{ name: string }>();
   const contentRef = useRef<HTMLIonContentElement>(null);
   const headerRef = useRef<HTMLIonHeaderElement>(null);
-  const [note, setNote] = useState<NoteType>();
+  const [noteId, setNoteId] = useState<NoteType['id']>();
   const [name, setName] = useState<NoteType["name"]>(nameParam);
   const [viewportOffset, setViewportOffset] = useState(0);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -67,17 +74,15 @@ export const Note = () => {
         }
       }
 
-      if (note && !transaction.getMeta('preventUpdate')) {
-        saveNoteCursor(editor, note.id);
+      if (noteId && !transaction.getMeta('preventUpdate')) {
+        saveNoteCursor(editor, noteId);
       }
     },
     onUpdate: ({ editor }) => {
-      if (note) {
-        saveNoteContent(editor, note.id);
+      if (noteId) {
+        saveNoteContent(editor, noteId);
       }
     },
-    onFocus: ({ editor, event }) => {
-    }
   });
 
   useEffect(() => {
@@ -85,7 +90,7 @@ export const Note = () => {
       const foundNote = await findNoteByName(nameParam);
 
       if (foundNote) {
-        setNote(foundNote);
+        setNoteId(foundNote.id);
         setName(foundNote.name);
       } else {
         history.push("/error");
@@ -96,22 +101,29 @@ export const Note = () => {
   }, []);
 
   useEffect(() => {
-    if (editor && note) {
-      editor
-        .chain()
-        .setContent(note.content, { emitUpdate: false })
-        .setTextSelection(note.cursor || 0)
-        .focus()
-        .run();
+    if (editor && noteId) {
+      const setContent = async () => {
+        const note = await getNoteById(noteId);
+        if (note) {
+          editor
+            .chain()
+            .setContent(note.content, { emitUpdate: false })
+            .setTextSelection(note.cursor || 0)
+            .focus()
+            .run();
+        }
+      }
 
-      touchNote(note.id);
+      setContent();
+      touchNote(noteId);
+      syncAll(setContent);
     }
-  }, [editor, note]);
+  }, [editor, noteId]);
 
   const handleNameChange = (value: string) => {
     setName(value);
-    if (note) {
-      saveNoteName(note.id, value);
+    if (noteId) {
+      saveNoteName(noteId, value);
     }
   };
 
@@ -179,28 +191,36 @@ export const Note = () => {
         </IonHeader>
         <IonActionSheet
           isOpen={showMenu}
-          onDidDismiss={({ detail }) => {
-            if (note && detail.data?.action === "delete") {
-              deleteNote(note)
-              router.push("/");
-            }
+          onDidDismiss={() => {
             setShowMenu(false);
           }}
           header="Note actions"
           buttons={[
             {
+              text: "Connect Dropbox",
+              handler: async () => {
+                const redirect = async () => {
+                  window.location.href = await getAuthUrl();
+                }
+                return redirect();
+              }
+            },
+            {
               text: "Delete",
               role: "destructive",
-              data: {
-                action: "delete",
+              handler: () => {
+                const deleteAndWait = async () => {
+                  if (noteId) {
+                    await deleteNote(noteId);
+                    history.push("/");
+                  }
+                }
+                deleteAndWait();
               },
             },
             {
               text: "Cancel",
               role: "cancel",
-              data: {
-                action: "cancel",
-              },
             },
           ]}
         />
@@ -215,7 +235,7 @@ export const Note = () => {
           <EditorContent editor={editor} />
         </div>
       </IonContent>
-      {editor && <EditorFooter currentNoteId={note?.id} editor={editor} />}
+      {editor && <EditorFooter currentNoteId={noteId} editor={editor} />}
     </IonPage>
   );
 };
