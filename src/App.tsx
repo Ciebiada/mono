@@ -40,7 +40,7 @@ setupIonicReact();
 
 export const App = () => (
   <IonApp>
-    <IonReactRouter>
+    <IonReactRouter basename="/mono">
       <IonRouterOutlet>
         <Route path="/notes/:name" component={Note} />
         <Route exact path="/" component={LastOpenedNote} />

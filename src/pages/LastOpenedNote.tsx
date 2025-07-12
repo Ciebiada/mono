@@ -10,8 +10,6 @@ export const LastOpenedNote = () => {
       const notes = await getAllNotesSorted();
       const note = notes[0];
 
-      console.log('last opened note', note);
-
       if (note) {
         return note;
       } else {
