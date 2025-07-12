@@ -17,7 +17,7 @@ import { getAuthUrl, initDropbox } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
 
 const DROPBOX_CLIENT_ID = "vendb84lzmnzbq9";
-const DROPBOX_REDIRECT_PATH = "/oauth-callback";
+const DROPBOX_REDIRECT_PATH = "oauth-callback";
 
 initDropbox(DROPBOX_CLIENT_ID, DROPBOX_REDIRECT_PATH);
 

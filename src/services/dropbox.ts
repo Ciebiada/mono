@@ -31,7 +31,7 @@ export const initDropbox = (
   redirectUriParam: string,
 ): void => {
   const baseUrl = window.location.origin;
-  redirectUri = baseUrl + redirectUriParam;
+  redirectUri = `${baseUrl}/mono/${redirectUriParam}`;
 
   dbxAuth = new DropboxAuth({clientId});
   dbx = new Dropbox({ auth: dbxAuth });
@@ -69,7 +69,7 @@ export const handleAuthCallback = async (code: string): Promise<boolean> => {
 
     dbxAuth.setCodeVerifier(codeVerifier as string);
 
-      const response = await dbxAuth.getAccessTokenFromCode(redirectUri, code);
+    const response = await dbxAuth.getAccessTokenFromCode(redirectUri, code);
 
     if (response?.result && (response.result as any).access_token) {
       setAccessToken((response.result as any).access_token);
