@@ -145,7 +145,7 @@ export const EditorFooter = ({ currentNoteId, editor }: EditorFooterProps) => {
     }
   };
 
-  return editor && (
+  return (
     <IonFooter translucent>
       <IonToolbar>
         <div style={{ display: "flex", justifyContent: "center" }}>

@@ -57,6 +57,7 @@ export const Note = () => {
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [noteLoaded, setNoteLoaded] = useState(false);
   const editor = useEditor({
     extensions,
     onSelectionUpdate: ({ editor, transaction }) => {
@@ -111,6 +112,8 @@ export const Note = () => {
             .setTextSelection(note.cursor || 0)
             .focus()
             .run();
+
+          setNoteLoaded(true);
         }
       }
 
@@ -232,7 +235,7 @@ export const Note = () => {
             } as React.CSSProperties
           }
         >
-          <EditorContent editor={editor} />
+          {noteLoaded && <EditorContent editor={editor} />}
         </div>
       </IonContent>
       {editor && <EditorFooter currentNoteId={noteId} editor={editor} />}
