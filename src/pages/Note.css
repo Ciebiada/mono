@@ -1,3 +1,7 @@
+body {
+  touch-action: none;
+}
+
 .tiptap {
   white-space: pre-wrap;
   outline: none;
