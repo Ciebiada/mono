@@ -24,12 +24,6 @@ export const getNoteById = async (noteId: number) => {
   return await db.notes.get(noteId);
 };
 
-export const touchNote = async (noteId: number) => {
-  await db.notes.update(noteId, {
-    lastOpened: Date.now(),
-  });
-};
-
 export const updateNote = async (noteId: number, updates: Partial<Omit<Note, "id">>) => {
   await db.notes.update(noteId, updates);
 };

@@ -2,7 +2,7 @@ import { IonActionSheet, IonButton, IonButtons, IonContent, IonHeader, IonIcon, 
 import { useRef, useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { EditorFooter } from "../components/EditorFooter";
-import { deleteNote, findNoteByName, getNoteById, touchNote, updateNote } from "../services/notes";
+import { deleteNote, findNoteByName, getNoteById, updateNote } from "../services/notes";
 import { debounce } from "../services/debounce";
 import { Note as NoteType } from "../services/db";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
@@ -90,7 +90,7 @@ export const Note = () => {
       if (foundNote) {
         setNoteId(foundNote.id);
         setName(foundNote.name);
-        touchNote(foundNote.id);
+        updateNote(foundNote.id, { lastOpened: Date.now() });
       } else {
         history.push("/error");
       }
