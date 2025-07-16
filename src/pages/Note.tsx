@@ -7,7 +7,6 @@ import { debounce } from "../services/debounce";
 import { Note as NoteType } from "../services/db";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Placeholder } from "@tiptap/extensions";
 import "./Note.css";
 import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
@@ -25,7 +24,6 @@ const extensions = [
   StarterKit,
   TaskList,
   TaskItem.configure({ nested: true }),
-  Placeholder.configure({ placeholder: "Write your note here..." }),
   TabHandler,
 ];
 
@@ -57,7 +55,6 @@ export const Note = () => {
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
-  const [noteLoaded, setNoteLoaded] = useState(false);
   const editor = useEditor({
     extensions,
     onSelectionUpdate: ({ editor, transaction }) => {
@@ -112,8 +109,6 @@ export const Note = () => {
             .setTextSelection(note.cursor || 0)
             .focus()
             .run();
-
-          setNoteLoaded(true);
         }
       }
 
@@ -235,7 +230,7 @@ export const Note = () => {
             } as React.CSSProperties
           }
         >
-          {noteLoaded && <EditorContent editor={editor} />}
+          <EditorContent editor={editor} />
         </div>
       </IonContent>
       {editor && <EditorFooter currentNoteId={noteId} editor={editor} />}
