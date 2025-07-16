@@ -84,18 +84,19 @@ export const Note = () => {
   });
 
   useEffect(() => {
-    const findNote = async () => {
+    const getNote = async () => {
       const foundNote = await findNoteByName(nameParam);
 
       if (foundNote) {
         setNoteId(foundNote.id);
         setName(foundNote.name);
+        touchNote(foundNote.id);
       } else {
         history.push("/error");
       }
     };
 
-    findNote();
+    getNote();
   }, []);
 
   useEffect(() => {
@@ -113,7 +114,6 @@ export const Note = () => {
       }
 
       setContent();
-      touchNote(noteId);
       syncAll(setContent);
     }
   }, [editor, noteId]);
