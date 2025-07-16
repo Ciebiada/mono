@@ -31,12 +31,7 @@ export const touchNote = async (noteId: number) => {
 };
 
 export const updateNote = async (noteId: number, updates: Partial<Omit<Note, "id">>) => {
-  const filteredUpdates = Object.fromEntries(Object.entries(updates).filter(([_, value]) => value !== undefined));
-
-  await db.notes.update(noteId, {
-    ...filteredUpdates,
-    lastModified: Date.now(),
-  });
+  await db.notes.update(noteId, updates);
 };
 
 export const deleteNote = async (noteId: Note['id']) => {

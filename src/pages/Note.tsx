@@ -34,7 +34,7 @@ const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
 
 const saveNoteContent = debounce(async (editor: Editor, noteId: NoteType["id"]) => {
   const content = editor.getJSON()
-  await updateNote(noteId, { content });
+  await updateNote(noteId, { content, lastModified: Date.now() });
   await syncNote(noteId);
 }, 500);
 
