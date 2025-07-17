@@ -18,6 +18,7 @@ import { debounce } from "../services/debounce";
 import { Note as NoteType } from "../services/db";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Placeholder } from "@tiptap/extensions";
 import "./Note.css";
 import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
@@ -31,7 +32,13 @@ const DROPBOX_REDIRECT_PATH = "oauth-callback";
 
 initDropbox(DROPBOX_CLIENT_ID, DROPBOX_REDIRECT_PATH);
 
-const extensions = [StarterKit, TaskList, TaskItem.configure({ nested: true }), TabHandler];
+const extensions = [
+  StarterKit,
+  Placeholder.configure({ placeholder: "Type something..." }),
+  TaskList,
+  TaskItem.configure({ nested: true }),
+  TabHandler,
+];
 
 const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
   await updateNote(noteId, { name });
@@ -64,6 +71,7 @@ export const Note = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [present] = useIonActionSheet();
   const [isDropboxConnected, setIsDropboxConnected] = useState(isDropboxInitialized());
+  const [isNoteLoaded, setIsNoteLoaded] = useState(false);
 
   const editor = useEditor({
     extensions,
@@ -124,6 +132,8 @@ export const Note = () => {
             .setTextSelection(note.cursor || 0)
             .focus()
             .run();
+
+          setIsNoteLoaded(true);
         }
       };
 
@@ -227,22 +237,23 @@ export const Note = () => {
           }}
           header="Note actions"
           buttons={[
-            isDropboxConnected ? {
-              text: "Disconnect Dropbox",
-              handler: async () => {
-                disconnectDropbox();
-                setIsDropboxConnected(false);
-              },
-            } :
-            {
-              text: "Connect Dropbox",
-              handler: async () => {
-                const dropboxRedirect = async () => {
-                  window.location.href = await getAuthUrl();
-                };
-                return dropboxRedirect();
-              },
-            },
+            isDropboxConnected
+              ? {
+                  text: "Disconnect Dropbox",
+                  handler: async () => {
+                    disconnectDropbox();
+                    setIsDropboxConnected(false);
+                  },
+                }
+              : {
+                  text: "Connect Dropbox",
+                  handler: async () => {
+                    const dropboxRedirect = async () => {
+                      window.location.href = await getAuthUrl();
+                    };
+                    return dropboxRedirect();
+                  },
+                },
             {
               text: "Delete",
               role: "destructive",
@@ -271,7 +282,7 @@ export const Note = () => {
             } as React.CSSProperties
           }
         >
-          <EditorContent editor={editor} />
+          <EditorContent style={{ visibility: isNoteLoaded ? "visible" : "hidden" }} editor={editor} />
         </div>
       </IonContent>
       {editor && <EditorFooter currentNoteId={noteId} editor={editor} />}
