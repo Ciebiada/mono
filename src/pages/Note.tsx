@@ -11,7 +11,7 @@ import {
   useIonActionSheet,
 } from "@ionic/react";
 import { useRef, useEffect, useState } from "react";
-import { useHistory, useParams } from "react-router-dom";
+import { useHistory, useParams, useLocation } from "react-router-dom";
 import { EditorFooter } from "../components/EditorFooter";
 import { deleteNote, findNoteByName, getNoteById, updateNote } from "../services/notes";
 import { debounce } from "../services/debounce";
@@ -23,7 +23,7 @@ import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
 import { TabHandler } from "../services/TabHandler";
 import { TaskItem } from "../services/TaskItem";
-import { getAuthUrl, initDropbox } from "../services/dropbox";
+import { disconnectDropbox, getAuthUrl, initDropbox, isDropboxInitialized } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
 
 const DROPBOX_CLIENT_ID = "vendb84lzmnzbq9";
@@ -52,6 +52,7 @@ const saveNoteCursor = debounce(async (editor: Editor, noteId: NoteType["id"]) =
 
 export const Note = () => {
   const history = useHistory();
+  const location = useLocation();
   const { name: nameParam } = useParams<{ name: string }>();
   const contentRef = useRef<HTMLIonContentElement>(null);
   const headerRef = useRef<HTMLIonHeaderElement>(null);
@@ -61,6 +62,9 @@ export const Note = () => {
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [showMenu, setShowMenu] = useState(false);
+  const [present] = useIonActionSheet();
+  const [isDropboxConnected, setIsDropboxConnected] = useState(isDropboxInitialized());
+
   const editor = useEditor({
     extensions,
     onSelectionUpdate: ({ editor, transaction }) => {
@@ -88,6 +92,10 @@ export const Note = () => {
       }
     },
   });
+
+  useEffect(() => {
+    setIsDropboxConnected(isDropboxInitialized());
+  }, [location]);
 
   useEffect(() => {
     const getNote = async () => {
@@ -156,8 +164,6 @@ export const Note = () => {
     }
   }, []);
 
-  const [present] = useIonActionSheet();
-
   const areYouSure = () =>
     new Promise<boolean>((resolve, reject) => {
       present({
@@ -221,6 +227,13 @@ export const Note = () => {
           }}
           header="Note actions"
           buttons={[
+            isDropboxConnected ? {
+              text: "Disconnect Dropbox",
+              handler: async () => {
+                disconnectDropbox();
+                setIsDropboxConnected(false);
+              },
+            } :
             {
               text: "Connect Dropbox",
               handler: async () => {
