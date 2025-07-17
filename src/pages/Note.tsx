@@ -279,10 +279,12 @@ export const Note = () => {
           style={
             {
               "--tiptap-padding-bottom": `${keyboardHeight + 100}px`,
+              // Prevents placeholder from flashing
+              "--tiptap-placeholder-display": isNoteLoaded ? "block" : "none",
             } as React.CSSProperties
           }
         >
-          <EditorContent style={{ visibility: isNoteLoaded ? "visible" : "hidden" }} editor={editor} />
+          <EditorContent editor={editor} />
         </div>
       </IonContent>
       {editor && <EditorFooter currentNoteId={noteId} editor={editor} />}

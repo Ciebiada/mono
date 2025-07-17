@@ -10,6 +10,7 @@
 
   /* Placeholder styles */
   p.is-editor-empty:first-child::before {
+    display: var(--tiptap-placeholder-display);
     color: #adb5bd;
     content: attr(data-placeholder);
     float: left;
