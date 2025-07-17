@@ -165,7 +165,7 @@ export const Note = () => {
         buttons: [
           {
             text: "Yes",
-            role: "confirm",
+            role: "destructive",
             handler: () => resolve(true),
           },
           {
