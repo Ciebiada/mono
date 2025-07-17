@@ -1,4 +1,15 @@
-import { IonActionSheet, IonButton, IonButtons, IonContent, IonHeader, IonIcon, IonPage, IonTitle, IonToolbar, useIonRouter } from "@ionic/react";
+import {
+  IonActionSheet,
+  IonButton,
+  IonButtons,
+  IonContent,
+  IonHeader,
+  IonIcon,
+  IonPage,
+  IonTitle,
+  IonToolbar,
+  useIonActionSheet,
+} from "@ionic/react";
 import { useRef, useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { EditorFooter } from "../components/EditorFooter";
@@ -20,12 +31,7 @@ const DROPBOX_REDIRECT_PATH = "oauth-callback";
 
 initDropbox(DROPBOX_CLIENT_ID, DROPBOX_REDIRECT_PATH);
 
-const extensions = [
-  StarterKit,
-  TaskList,
-  TaskItem.configure({ nested: true }),
-  TabHandler,
-];
+const extensions = [StarterKit, TaskList, TaskItem.configure({ nested: true }), TabHandler];
 
 const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
   await updateNote(noteId, { name });
@@ -33,7 +39,7 @@ const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
 }, 500);
 
 const saveNoteContent = debounce(async (editor: Editor, noteId: NoteType["id"]) => {
-  const content = editor.getJSON()
+  const content = editor.getJSON();
   await updateNote(noteId, { content, lastModified: Date.now() });
   await syncNote(noteId);
 }, 500);
@@ -49,7 +55,7 @@ export const Note = () => {
   const { name: nameParam } = useParams<{ name: string }>();
   const contentRef = useRef<HTMLIonContentElement>(null);
   const headerRef = useRef<HTMLIonHeaderElement>(null);
-  const [noteId, setNoteId] = useState<NoteType['id']>();
+  const [noteId, setNoteId] = useState<NoteType["id"]>();
   const [name, setName] = useState<NoteType["name"]>(nameParam);
   const [viewportOffset, setViewportOffset] = useState(0);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -72,7 +78,7 @@ export const Note = () => {
         }
       }
 
-      if (noteId && !transaction.getMeta('preventUpdate')) {
+      if (noteId && !transaction.getMeta("preventUpdate")) {
         saveNoteCursor(editor, noteId);
       }
     },
@@ -111,7 +117,7 @@ export const Note = () => {
             .focus()
             .run();
         }
-      }
+      };
 
       setContent();
       syncAll(setContent);
@@ -149,6 +155,27 @@ export const Note = () => {
       };
     }
   }, []);
+
+  const [present] = useIonActionSheet();
+
+  const areYouSure = () =>
+    new Promise<boolean>((resolve, reject) => {
+      present({
+        header: "Are you sure?",
+        buttons: [
+          {
+            text: "Yes",
+            role: "confirm",
+            handler: () => resolve(true),
+          },
+          {
+            text: "No",
+            role: "cancel",
+            handler: () => reject(),
+          },
+        ],
+      });
+    });
 
   return (
     <IonPage>
@@ -197,23 +224,24 @@ export const Note = () => {
             {
               text: "Connect Dropbox",
               handler: async () => {
-                const redirect = async () => {
+                const dropboxRedirect = async () => {
                   window.location.href = await getAuthUrl();
-                }
-                return redirect();
-              }
+                };
+                return dropboxRedirect();
+              },
             },
             {
               text: "Delete",
               role: "destructive",
-              handler: () => {
-                const deleteAndWait = async () => {
+              handler: async () => {
+                await areYouSure();
+                const deleteAndRedirect = async () => {
                   if (noteId) {
                     await deleteNote(noteId);
                     history.push("/");
                   }
-                }
-                deleteAndWait();
+                };
+                deleteAndRedirect();
               },
             },
             {
