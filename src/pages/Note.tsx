@@ -137,8 +137,18 @@ export const Note = () => {
         }
       };
 
+      const handleSync = () => syncAll(setContent);
+
       setContent();
-      syncAll(setContent);
+      handleSync();
+
+      window.addEventListener('focus', handleSync);
+      document.addEventListener('visibilitychange', handleSync);
+
+      return () => {
+        window.removeEventListener('focus', handleSync);
+        document.removeEventListener('visibilitychange', handleSync);
+      };
     }
   }, [editor, noteId]);
 
