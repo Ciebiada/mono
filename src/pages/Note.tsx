@@ -26,6 +26,7 @@ import { TabHandler } from "../services/TabHandler";
 import { TaskItem } from "../services/TaskItem";
 import { disconnectDropbox, getAuthUrl, initDropbox, isDropboxInitialized } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
+import { NoFocusLink } from "../services/NoFocusLink";
 
 const DROPBOX_CLIENT_ID = "vendb84lzmnzbq9";
 const DROPBOX_REDIRECT_PATH = "oauth-callback";
@@ -33,7 +34,10 @@ const DROPBOX_REDIRECT_PATH = "oauth-callback";
 initDropbox(DROPBOX_CLIENT_ID, DROPBOX_REDIRECT_PATH);
 
 const extensions = [
-  StarterKit,
+  StarterKit.configure({
+    link: false, // We use our own NoFocusLink extension
+  }),
+  NoFocusLink,
   Placeholder.configure({ placeholder: "Type something..." }),
   TaskList,
   TaskItem.configure({ nested: true }),
