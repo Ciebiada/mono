@@ -350,6 +350,13 @@ const parseBulletList = (lines: string[], startIndex: number): [TipTapNode, numb
 
   while (i < lines.length) {
     const line = lines[i];
+
+    // Check if this is a task list item at the same indentation level - if so, stop parsing bullet list
+    const taskMatch = line.match(/^(\s*)- \[([ x])\]\s*(.*)$/);
+    if (taskMatch && taskMatch[1].length === baseIndentLevel) {
+      break;
+    }
+
     const bulletMatch = line.match(/^(\s*)[-*+]\s+(.*)$/);
 
     if (!bulletMatch) break;
@@ -446,6 +453,13 @@ const parseOrderedList = (lines: string[], startIndex: number): [TipTapNode, num
 
   while (i < lines.length) {
     const line = lines[i];
+
+    // Check if this is a task list item at the same indentation level - if so, stop parsing ordered list
+    const taskMatch = line.match(/^(\s*)- \[([ x])\]\s*(.*)$/);
+    if (taskMatch && taskMatch[1].length === baseIndentLevel) {
+      break;
+    }
+
     const orderedMatch = line.match(/^(\s*)\d+\.\s+(.*)$/);
 
     if (!orderedMatch) break;
