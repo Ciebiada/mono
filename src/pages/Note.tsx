@@ -146,12 +146,12 @@ export const Note = () => {
       setContent();
       handleSync();
 
-      window.addEventListener('focus', handleSync);
-      document.addEventListener('visibilitychange', handleSync);
+      window.addEventListener("focus", handleSync);
+      document.addEventListener("visibilitychange", handleSync);
 
       return () => {
-        window.removeEventListener('focus', handleSync);
-        document.removeEventListener('visibilitychange', handleSync);
+        window.removeEventListener("focus", handleSync);
+        document.removeEventListener("visibilitychange", handleSync);
       };
     }
   }, [editor, noteId]);

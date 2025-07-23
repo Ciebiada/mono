@@ -26,14 +26,11 @@ let dbxAuth: DropboxAuth;
 let dbx: Dropbox;
 let redirectUri: string;
 
-export const initDropbox = (
-  clientId: string,
-  redirectUriParam: string,
-): void => {
+export const initDropbox = (clientId: string, redirectUriParam: string): void => {
   const baseUrl = window.location.origin;
   redirectUri = `${baseUrl}/mono/${redirectUriParam}`;
 
-  dbxAuth = new DropboxAuth({clientId});
+  dbxAuth = new DropboxAuth({ clientId });
   dbx = new Dropbox({ auth: dbxAuth });
 
   if (isDropboxInitialized()) {
@@ -124,9 +121,7 @@ const withRetryOnAuth = async <T>(operation: () => Promise<T>): Promise<T> => {
     return await operation();
   } catch (error: any) {
     if (error?.status === 401 || error?.response?.status === 401) {
-      console.log(
-        "Received 401 error, attempting to refresh token and retry...",
-      );
+      console.log("Received 401 error, attempting to refresh token and retry...");
 
       const refreshed = await refreshAccessToken();
       if (refreshed) {
@@ -170,10 +165,7 @@ export const listFiles = async (path: string = ""): Promise<DropboxFile[]> => {
   });
 };
 
-export const uploadFile = async (
-  path: string,
-  content: string,
-): Promise<UploadResponse> => {
+export const uploadFile = async (path: string, content: string): Promise<UploadResponse> => {
   if (!isDropboxInitialized()) {
     throw new Error("Dropbox not initialized. Call initDropbox first.");
   }
@@ -224,10 +216,7 @@ export const deleteFile = async (path: string): Promise<void> => {
   });
 };
 
-export const moveFile = async (
-  fromPath: string,
-  toPath: string,
-): Promise<void> => {
+export const moveFile = async (fromPath: string, toPath: string): Promise<void> => {
   if (!isDropboxInitialized()) {
     throw new Error("Dropbox not initialized. Call initDropbox first.");
   }
@@ -242,7 +231,6 @@ export const moveFile = async (
 
 export const isDropboxInitialized = (): boolean => {
   return (
-    Boolean(localStorage.getItem("dropbox_access_token")) &&
-    Boolean(localStorage.getItem("dropbox_refresh_token"))
+    Boolean(localStorage.getItem("dropbox_access_token")) && Boolean(localStorage.getItem("dropbox_refresh_token"))
   );
 };

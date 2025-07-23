@@ -28,7 +28,7 @@ export const updateNote = async (noteId: number, updates: Partial<Omit<Note, "id
   await db.notes.update(noteId, updates);
 };
 
-export const deleteNote = async (noteId: Note['id']) => {
+export const deleteNote = async (noteId: Note["id"]) => {
   const note = await db.notes.get(noteId);
 
   if (note) {

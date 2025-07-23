@@ -1,12 +1,5 @@
 import { db, type Note } from "./db";
-import {
-  deleteFile,
-  downloadFile,
-  isDropboxInitialized,
-  listFiles,
-  moveFile,
-  uploadFile,
-} from "./dropbox";
+import { deleteFile, downloadFile, isDropboxInitialized, listFiles, moveFile, uploadFile } from "./dropbox";
 import type { DropboxFile } from "./dropbox";
 import { jsonToMarkdown, markdownToJson } from "./markdown";
 
@@ -36,10 +29,7 @@ export const syncAll = async (refreshContent: () => void): Promise<void> => {
   }
 };
 
-export const renameNote = async (
-  noteId: number,
-  newName: string,
-): Promise<void> => {
+export const renameNote = async (noteId: number, newName: string): Promise<void> => {
   await db.notes.update(noteId, {
     name: newName,
     syncStatus: "pending-rename",
@@ -78,10 +68,7 @@ export const syncDeleteNote = async (noteId: number): Promise<void> => {
 };
 
 const handleLocalDeletions = async (): Promise<void> => {
-  const pendingNotes = await db.notes
-    .where("syncStatus")
-    .equals("pending-delete")
-    .toArray();
+  const pendingNotes = await db.notes.where("syncStatus").equals("pending-delete").toArray();
 
   for (const note of pendingNotes) {
     await deleteRemoteNote(note);
@@ -89,10 +76,7 @@ const handleLocalDeletions = async (): Promise<void> => {
 };
 
 const uploadPendingChanges = async (): Promise<void> => {
-  const pendingNotes = await db.notes
-    .where("syncStatus")
-    .equals("pending")
-    .toArray();
+  const pendingNotes = await db.notes.where("syncStatus").equals("pending").toArray();
 
   for (const note of pendingNotes) {
     await uploadNote(note);
@@ -100,10 +84,7 @@ const uploadPendingChanges = async (): Promise<void> => {
 };
 
 const makePendingRenames = async (): Promise<void> => {
-  const pendingNotes = await db.notes
-    .where("syncStatus")
-    .equals("pending-rename")
-    .toArray();
+  const pendingNotes = await db.notes.where("syncStatus").equals("pending-rename").toArray();
 
   for (const note of pendingNotes) {
     if (note.dropboxId) {
@@ -150,10 +131,7 @@ const downloadRemoteChanges = async (refreshContent: () => void): Promise<void> 
 };
 
 const syncRemoteFile = async (remoteFile: DropboxFile): Promise<boolean> => {
-  const existingNote = await db.notes
-    .where("dropboxId")
-    .equals(remoteFile.id)
-    .first();
+  const existingNote = await db.notes.where("dropboxId").equals(remoteFile.id).first();
 
   const remoteTimestamp = new Date(remoteFile.lastModified).getTime();
 
@@ -174,7 +152,7 @@ const syncRemoteFile = async (remoteFile: DropboxFile): Promise<boolean> => {
     }
   }
 
-  return false
+  return false;
 };
 
 const downloadNewFile = async (remoteFile: DropboxFile): Promise<void> => {
@@ -194,10 +172,7 @@ const downloadNewFile = async (remoteFile: DropboxFile): Promise<void> => {
   });
 };
 
-const downloadFileUpdate = async (
-  localNote: Note,
-  remoteFile: DropboxFile,
-): Promise<void> => {
+const downloadFileUpdate = async (localNote: Note, remoteFile: DropboxFile): Promise<void> => {
   const markdownContent = await downloadFile(remoteFile.path);
 
   const content = markdownToJson(markdownContent);
@@ -210,10 +185,7 @@ const downloadFileUpdate = async (
   });
 };
 
-const handleConflict = async (
-  localNote: Note,
-  remoteFile: DropboxFile,
-): Promise<void> => {
+const handleConflict = async (localNote: Note, remoteFile: DropboxFile): Promise<void> => {
   const remoteContent = await downloadFile(remoteFile.path);
   const header = `# Conflict\nLocal update: ${new Date(localNote.lastModified)}\nRemote update: ${new Date(remoteFile.lastModified)}\n---\n`;
   const remoteContentJson = markdownToJson(header + remoteContent);
@@ -221,7 +193,7 @@ const handleConflict = async (
   const mergedContent = {
     ...localNote.content,
     content: localNote.content.content.concat(remoteContentJson.content),
-  }
+  };
 
   await db.notes.update(localNote.id, {
     content: mergedContent,
@@ -237,9 +209,7 @@ const handleRemoteDeletions = async (): Promise<void> => {
   const remoteFiles = await listFiles();
   const remoteIds = new Set(remoteFiles.map((f) => f.id));
 
-  const deletedRemotely = syncedNotes.filter(
-    (note) => note.dropboxId && !remoteIds.has(note.dropboxId),
-  );
+  const deletedRemotely = syncedNotes.filter((note) => note.dropboxId && !remoteIds.has(note.dropboxId));
 
   for (const note of deletedRemotely) {
     await db.notes.delete(note.id);

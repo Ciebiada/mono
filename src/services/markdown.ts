@@ -648,4 +648,3 @@ export const setEditorFromMarkdown = (editor: any, markdown: string): void => {
   const json = markdownToJson(markdown);
   editor.commands.setContent(json, { emitUpdate: false });
 };
-

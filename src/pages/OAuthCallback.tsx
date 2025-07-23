@@ -5,7 +5,7 @@ import { handleAuthCallback } from "../services/dropbox";
 export const OAuthCallback = () => {
   const history = useHistory();
   const location = useLocation();
-  const code = new URLSearchParams(location.search).get('code');
+  const code = new URLSearchParams(location.search).get("code");
 
   useEffect(() => {
     const redirect = async () => {
