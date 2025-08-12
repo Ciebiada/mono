@@ -165,9 +165,10 @@ export const EditorFooter = ({ currentNoteId, editor }: EditorFooterProps) => {
               onDidPresent={() => {
                 searchbar.current?.setFocus();
               }}
-              initialBreakpoint={0.33}
-              breakpoints={[0.33, 0.66]}
-              mode="ios"
+              initialBreakpoint={0.5}
+              breakpoints={[0.25, 0.5, 1]}
+              handle={true}
+              expandToScroll={false}
             >
               <IonContent className="ion-padding">
                 <IonSearchbar
