@@ -23,6 +23,7 @@ import "./Note.css";
 import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
 import { TabHandler } from "../services/TabHandler";
+import { MoveBlock } from "../services/MoveBlock";
 import { TaskItem } from "../services/TaskItem";
 import { disconnectDropbox, getAuthUrl, initDropbox, isDropboxInitialized } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
@@ -41,6 +42,7 @@ const extensions = [
   Placeholder.configure({ placeholder: "Type something..." }),
   TaskList,
   TaskItem.configure({ nested: true }),
+  MoveBlock,
   TabHandler,
 ];
 
