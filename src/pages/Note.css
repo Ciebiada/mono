@@ -106,6 +106,13 @@
       color: var(--ion-color-medium);
     }
   }
+
+  /* Align firefox bullet points */
+  @supports (-moz-appearance: none) {
+    ul:not([data-type="taskList"]) {
+      padding-left: 28px;
+    }
+  }
 }
 
 ion-title {
