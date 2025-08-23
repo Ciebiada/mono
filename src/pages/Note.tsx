@@ -22,12 +22,13 @@ import { Placeholder } from "@tiptap/extensions";
 import "./Note.css";
 import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
-import { TabHandler } from "../services/TabHandler";
-import { MoveBlock } from "../services/MoveBlock";
-import { TaskItem } from "../services/TaskItem";
+import { TabHandler } from "../tiptap-extensions/TabHandler";
+import { MoveBlock } from "../tiptap-extensions/MoveBlock";
+import { TaskItem } from "../tiptap-extensions/TaskItem";
 import { disconnectDropbox, getAuthUrl, initDropbox, isDropboxInitialized } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
-import { NoFocusLink } from "../services/NoFocusLink";
+import { NoFocusLink } from "../tiptap-extensions/NoFocusLink";
+import { AutoReplace } from "../tiptap-extensions/AutoReplace";
 
 const DROPBOX_CLIENT_ID = "vendb84lzmnzbq9";
 const DROPBOX_REDIRECT_PATH = "oauth-callback";
@@ -44,6 +45,7 @@ const extensions = [
   TaskItem.configure({ nested: true }),
   MoveBlock,
   TabHandler,
+  AutoReplace,
 ];
 
 const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
