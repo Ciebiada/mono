@@ -43,22 +43,22 @@
       input[type="checkbox"] {
         position: absolute;
         margin: 0;
+        padding: 0;
+        -webkit-appearance: none;
         appearance: none;
         width: 36px;
         height: 36px;
-        top: -7px;
         left: -33px;
+        top: calc(0.5lh + 1px);
+        transform: translateY(-50%);
 
         cursor: pointer;
 
         display: grid;
         place-content: center;
-
-        /* Firefox-specific adjustment */
-        @-moz-document url-prefix() {
-          left: -29px;
-        }
       }
+
+
 
       input[type="checkbox"]::before {
         content: "";
