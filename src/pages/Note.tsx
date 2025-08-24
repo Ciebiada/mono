@@ -28,7 +28,7 @@ import { TaskItem } from "../tiptap-extensions/TaskItem";
 import { disconnectDropbox, getAuthUrl, initDropbox, isDropboxInitialized } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
 import { NoFocusLink } from "../tiptap-extensions/NoFocusLink";
-import { AutoReplace } from "../tiptap-extensions/AutoReplace";
+import { SlashCommands } from "../tiptap-extensions/SlashCommands";
 
 const DROPBOX_CLIENT_ID = "vendb84lzmnzbq9";
 const DROPBOX_REDIRECT_PATH = "oauth-callback";
@@ -45,7 +45,7 @@ const extensions = [
   TaskItem.configure({ nested: true }),
   MoveBlock,
   TabHandler,
-  AutoReplace,
+  SlashCommands,
 ];
 
 const saveNoteName = debounce(async (noteId: NoteType["id"], name: string) => {
