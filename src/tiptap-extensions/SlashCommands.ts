@@ -12,31 +12,29 @@ function currentDate(): string {
 
 type CommandItem = {
   title: string;
+  hint?: string;
   command: (ctx: { editor: any; range: { from: number; to: number } }) => void;
 };
 
 // Default slash commands (kept at top for easy extension)
 const DEFAULT_COMMANDS: CommandItem[] = [
   {
-    title: "Today’s date",
-    command: ({ editor, range }) => {
-      editor.chain().deleteRange(range).insertContent(currentDate()).run();
-    },
-  },
-  {
     title: "Heading 1",
+    hint: "#",
     command: ({ editor, range }) => {
       editor.chain().deleteRange(range).setNode("heading", { level: 1 }).run();
     },
   },
   {
     title: "Heading 2",
+    hint: "##",
     command: ({ editor, range }) => {
       editor.chain().deleteRange(range).setNode("heading", { level: 2 }).run();
     },
   },
   {
     title: "Indent list item",
+    hint: "⇥",
     command: ({ editor, range }) => {
       const didTask = editor.chain().deleteRange(range).sinkListItem("taskItem").run();
       if (!didTask) {
@@ -46,11 +44,32 @@ const DEFAULT_COMMANDS: CommandItem[] = [
   },
   {
     title: "Outdent list item",
+    hint: "⇧⇥",
     command: ({ editor, range }) => {
       const didTask = editor.chain().deleteRange(range).liftListItem("taskItem").run();
       if (!didTask) {
         editor.chain().liftListItem("listItem").run();
       }
+    },
+  },
+  {
+    title: "Task list",
+    hint: "[] ",
+    command: ({ editor, range }) => {
+      editor.chain().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  {
+    title: "Bullet list",
+    hint: "- ",
+    command: ({ editor, range }) => {
+      editor.chain().deleteRange(range).toggleBulletList().run();
+    },
+  },
+  {
+    title: "Current date",
+    command: ({ editor, range }) => {
+      editor.chain().deleteRange(range).insertContent(currentDate()).run();
     },
   },
 ];
@@ -95,7 +114,7 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
       items: ({ query }: { query: string }) => {
         const items = resolveItems(this.options?.items);
         const q = query || "";
-        return items.filter((c) => fuzzyMatch(c.title, q));
+        return items.filter((c) => fuzzyMatch(c.title, q)).slice(0, 5);
       },
       render: () => {
         const el = document.createElement("div");
@@ -108,8 +127,11 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
         el.style.padding = "8px";
         el.style.borderRadius = "10px";
         el.style.boxShadow = "0 12px 28px rgba(0,0,0,0.28)";
-        el.style.background = "var(--ion-card-background, #ffffff)";
-        el.style.border = "1px solid rgba(0,0,0,0.18)";
+        // Translucent/blurred like Ionic headers/footers
+        el.style.background = "rgba(var(--ion-background-color-rgb, 255,255,255), 0.75)";
+        el.style.border = "1px solid rgba(var(--ion-text-color-rgb, 0,0,0), 0.12)";
+        el.style.backdropFilter = "saturate(180%) blur(20px)";
+        (el.style as any).WebkitBackdropFilter = "saturate(180%) blur(20px)";
         el.style.color = "var(--ion-text-color, #111)";
         el.style.fontSize = "12px";
 
@@ -154,7 +176,11 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
           currentItems.forEach((item, idx) => {
             const option = item;
             const row = document.createElement("div");
-            row.textContent = option.title;
+            row.textContent = "";
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+            row.style.justifyContent = "space-between";
+            row.style.gap = "8px";
             row.style.padding = "10px 12px";
             row.style.cursor = "pointer";
             row.style.borderRadius = "8px";
@@ -164,6 +190,23 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
               row.style.background = "rgba(56,128,255,0.16)";
               row.style.outline = "1px solid rgba(56,128,255,0.35)";
             }
+
+            const left = document.createElement("div");
+            left.textContent = option.title;
+
+            const hintStr = option.hint;
+            if (hintStr) {
+              const right = document.createElement("div");
+              right.textContent = hintStr;
+              right.style.fontSize = "12px";
+              right.style.opacity = "0.65";
+              right.style.padding = "0 4px";
+              row.appendChild(left);
+              row.appendChild(right);
+            } else {
+              row.appendChild(left);
+            }
+
             row.onmousedown = (e) => {
               e.preventDefault();
               if (option && lastProps?.editor && currentRange) {
