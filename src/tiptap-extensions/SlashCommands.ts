@@ -1,5 +1,6 @@
 import { Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
+import { computePosition, autoUpdate, offset, flip, shift, type VirtualElement } from "@floating-ui/dom";
 
 function currentDate(): string {
   const now = new Date();
@@ -80,7 +81,6 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
 
   addOptions() {
     return {
-      // items can be an array or a function returning an array
       items: DEFAULT_COMMANDS,
     };
   },
@@ -116,39 +116,45 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
         let currentItems: CommandItem[] = [];
         let currentSelectedIndex = 0;
         let currentClientRect: (() => DOMRect | null) | null = null;
-        let runCommand: ((item: CommandItem) => void) | null = null;
+        let lastProps: any = null;
+        let cleanupAutoUpdate: (() => void) | null = null;
         let containerEl: HTMLElement | null = null;
         let containerWasStatic = false;
-        let lastProps: any = null;
-        let rerender: (() => void) | null = null;
+        let currentRange: { from: number; to: number } | null = null;
 
-        const setPosition = (rect: DOMRect) => {
-          const menuHeight = el.offsetHeight;
-          const margin = 6;
-          if (containerEl) {
-            const containerRect = containerEl.getBoundingClientRect();
-            const left = rect.left - containerRect.left;
-            const bottomSpace = containerRect.bottom - rect.bottom;
-            const openAbove = bottomSpace < menuHeight + margin;
-            const topBelow = rect.bottom - containerRect.top + margin;
-            const topAbove = Math.max(0, rect.top - containerRect.top - menuHeight - margin);
-            el.style.left = `${left}px`;
-            el.style.top = `${openAbove ? topAbove : topBelow}px`;
-          } else {
-            const bottomSpace = window.innerHeight - rect.bottom;
-            const openAbove = bottomSpace < menuHeight + margin;
-            const topBelow = rect.bottom + margin;
-            const topAbove = Math.max(0, rect.top - menuHeight - margin);
-            el.style.left = `${rect.left}px`;
-            el.style.top = `${openAbove ? topAbove : topBelow}px`;
+        const virtualReference: VirtualElement = {
+          getBoundingClientRect: () => {
+            const rect = currentClientRect ? currentClientRect() : null;
+            return rect ?? new DOMRect(0, 0, 0, 0);
+          },
+        };
+
+        const updateFloatingPosition = async () => {
+          if (!currentClientRect) {
+            el.style.display = "none";
+            return;
           }
+          const rect = currentClientRect();
+          if (!rect) {
+            el.style.display = "none";
+            return;
+          }
+          el.style.display = "block";
+          const { x, y } = await computePosition(virtualReference, el, {
+            placement: "bottom-start",
+            strategy: "absolute",
+            middleware: [offset(6), flip(), shift({ padding: 8 })],
+          });
+          el.style.left = `${x}px`;
+          el.style.top = `${y}px`;
         };
 
         const buildRows = () => {
           const frag = document.createDocumentFragment();
           currentItems.forEach((item, idx) => {
+            const option = item;
             const row = document.createElement("div");
-            row.textContent = item.title;
+            row.textContent = option.title;
             row.style.padding = "10px 12px";
             row.style.cursor = "pointer";
             row.style.borderRadius = "8px";
@@ -160,9 +166,9 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
             }
             row.onmousedown = (e) => {
               e.preventDefault();
-              e.stopPropagation();
-              const item = currentItems[idx];
-              if (item && runCommand) runCommand(item);
+              if (option && lastProps?.editor && currentRange) {
+                option.command({ editor: lastProps.editor, range: currentRange });
+              }
             };
             frag.appendChild(row);
           });
@@ -170,11 +176,13 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
         };
 
         const update = (props: any) => {
-          lastProps = props;
-          const { items, clientRect, selectedIndex } = props;
+          // Merge to preserve fields like editor across partial updates
+          lastProps = { ...(lastProps || {}), ...(props || {}) };
+          const { items, clientRect, selectedIndex, range } = lastProps || {};
           currentItems = Array.isArray(items) ? items : [];
           currentSelectedIndex = Math.max(0, Math.min(selectedIndex ?? 0, Math.max(0, currentItems.length - 1)));
           currentClientRect = clientRect || null;
+          currentRange = range || null;
           el.setAttribute("contenteditable", "false");
           el.innerHTML = "";
 
@@ -183,23 +191,14 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
             return;
           }
 
-          const rect = currentClientRect();
-          if (!rect) {
-            el.style.display = "none";
-            return;
-          }
-
-          el.style.display = "block";
           buildRows();
-          setPosition(rect);
+          updateFloatingPosition();
         };
 
         const removeAllListeners = () => {
-          if (rerender) {
-            containerEl?.removeEventListener("scroll", rerender as any);
-            window.removeEventListener("scroll", rerender as any);
-            window.removeEventListener("resize", rerender as any);
-            rerender = null;
+          if (cleanupAutoUpdate) {
+            cleanupAutoUpdate();
+            cleanupAutoUpdate = null;
           }
         };
 
@@ -218,19 +217,13 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
             }
 
             target.appendChild(el);
-
-            rerender = () => {
+            cleanupAutoUpdate = autoUpdate(virtualReference, el, () => {
               if (lastProps) update(lastProps);
-            };
-            containerEl?.addEventListener("scroll", rerender, { passive: true } as any);
-            window.addEventListener("scroll", rerender, { passive: true } as any);
-            window.addEventListener("resize", rerender, { passive: true } as any);
-
-            runCommand = (item: CommandItem) => props.command(item);
+              updateFloatingPosition();
+            });
             update(props);
           },
           onUpdate: (props: any) => {
-            runCommand = (item: CommandItem) => props.command(item);
             update(props);
           },
           onKeyDown: (props: any) => {
@@ -238,22 +231,27 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
             const hasItems = currentItems.length > 0;
             if (!hasItems) return false;
 
+            const activeRange = props?.range || currentRange;
+            if (activeRange) currentRange = activeRange;
+
             if (event.key === "ArrowDown") {
               currentSelectedIndex = (currentSelectedIndex + 1) % currentItems.length;
-              if (currentClientRect) update({ items: currentItems, selectedIndex: currentSelectedIndex, clientRect: currentClientRect });
+              if (currentClientRect) update({ items: currentItems, selectedIndex: currentSelectedIndex, clientRect: currentClientRect, range: activeRange, editor: lastProps?.editor });
               event.preventDefault();
               return true;
             }
             if (event.key === "ArrowUp") {
               currentSelectedIndex = (currentSelectedIndex - 1 + currentItems.length) % currentItems.length;
-              if (currentClientRect) update({ items: currentItems, selectedIndex: currentSelectedIndex, clientRect: currentClientRect });
+              if (currentClientRect) update({ items: currentItems, selectedIndex: currentSelectedIndex, clientRect: currentClientRect, range: activeRange, editor: lastProps?.editor });
               event.preventDefault();
               return true;
             }
             if (event.key === "Enter") {
               const index = Math.max(0, Math.min(currentSelectedIndex ?? 0, currentItems.length - 1));
               const item = currentItems[index];
-              if (item && runCommand) runCommand(item);
+              if (item && lastProps?.editor && activeRange) {
+                item.command({ editor: lastProps.editor, range: activeRange });
+              }
               event.preventDefault();
               return true;
             }
@@ -266,17 +264,24 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
           onExit: () => {
             removeAllListeners();
             el.remove();
+            currentItems = [];
+            currentClientRect = null;
             if (containerEl && containerWasStatic) {
               containerEl.style.position = "";
             }
-            currentItems = [];
-            currentClientRect = null;
-            runCommand = null;
             containerEl = null;
+            containerWasStatic = false;
           },
         };
       },
       command: ({ editor, range, props }: { editor: any; range: { from: number; to: number }; props: CommandItem }) => {
+        try {
+          if (editor?.commands?.focus) {
+            editor.commands.focus();
+          } else if (editor?.view?.dom) {
+            (editor.view.dom as HTMLElement).focus();
+          }
+        } catch {}
         if (typeof props?.command === "function") {
           props.command({ editor, range });
         }
