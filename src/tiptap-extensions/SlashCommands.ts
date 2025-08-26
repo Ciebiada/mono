@@ -152,6 +152,10 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
         };
 
         const updateFloatingPosition = async () => {
+          if (!currentItems.length) {
+            el.style.display = "none";
+            return;
+          }
           if (!currentClientRect) {
             el.style.display = "none";
             return;
