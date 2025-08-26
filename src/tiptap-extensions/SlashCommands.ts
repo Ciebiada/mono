@@ -128,7 +128,7 @@ export const SlashCommands = Extension.create<{ items?: ItemsProvider }>({
         el.style.borderRadius = "10px";
         el.style.boxShadow = "0 12px 28px rgba(0,0,0,0.28)";
         // Translucent/blurred like Ionic headers/footers
-        el.style.background = "rgba(var(--ion-background-color-rgb, 255,255,255), 0.75)";
+        el.style.background = "rgba(var(--ion-background-color-rgb, 255,255,255), 0.5)";
         el.style.border = "1px solid rgba(var(--ion-text-color-rgb, 0,0,0), 0.12)";
         el.style.backdropFilter = "saturate(180%) blur(20px)";
         (el.style as any).WebkitBackdropFilter = "saturate(180%) blur(20px)";
