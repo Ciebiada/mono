@@ -4,13 +4,16 @@
   min-height: 100dvh;
   padding-bottom: var(--tiptap-padding-bottom);
 
-  .tiptap-ghost-suggestion {
-    color: #999;
-    pointer-events: none;
+  p {
+    margin: 6px 0;
   }
 
-  p {
-    margin: 8px 0;
+  h1, h1 + h2, h2 + h3, h3 + h4, h4 + h5, h5 + h6 {
+    margin-top: 0;
+  }
+
+  h1:not(:first-of-type), h2, h3, h4, h5, h6 {
+    margin-top: 30px;
   }
 
   /* Placeholder styles */
@@ -32,6 +35,7 @@
   /* List styles */
   ul,
   ol {
+    margin: 6px 0;
     padding-left: 32px;
   }
 
