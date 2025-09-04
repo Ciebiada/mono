@@ -31,6 +31,19 @@ export interface TaskItemOptions {
    * @example 'myCustomTaskList'
    */
   taskListTypeName: string;
+
+  /**
+   * Accessibility options for the task item.
+   * @default {}
+   * @example
+   * ```js
+   * {
+   *   checkboxLabel: (node) => `Task item: ${node.textContent || 'empty task item'}`
+   * }
+   */
+  a11y?: {
+    checkboxLabel?: (node: ProseMirrorNode, checked: boolean) => string;
+  };
 }
 
 /**
@@ -50,6 +63,7 @@ export const TaskItem = Node.create<TaskItemOptions>({
       nested: false,
       HTMLAttributes: {},
       taskListTypeName: "taskList",
+      a11y: undefined,
     };
   },
 
@@ -127,12 +141,20 @@ export const TaskItem = Node.create<TaskItemOptions>({
   addNodeView() {
     return ({ node, HTMLAttributes, getPos, editor }) => {
       const listItem = document.createElement("li");
-      // const checkboxWrapper = document.createElement('label')
-      // const checkboxStyler = document.createElement('span')
+      const checkboxWrapper = document.createElement("label");
+      const checkboxStyler = document.createElement("span");
       const checkbox = document.createElement("input");
       const content = document.createElement("div");
 
-      // checkboxWrapper.contentEditable = 'false'
+      const updateA11Y = (currentNode: ProseMirrorNode) => {
+        checkbox.ariaLabel =
+          this.options.a11y?.checkboxLabel?.(currentNode, checkbox.checked) ||
+          `Task item checkbox for ${currentNode.textContent || "empty task item"}`;
+      };
+
+      updateA11Y(node);
+
+      checkboxWrapper.contentEditable = "false";
       checkbox.type = "checkbox";
       checkbox.addEventListener("mousedown", (event) => event.preventDefault());
       checkbox.addEventListener("change", (event) => {
@@ -182,8 +204,8 @@ export const TaskItem = Node.create<TaskItemOptions>({
       listItem.dataset.checked = node.attrs.checked;
       checkbox.checked = node.attrs.checked;
 
-      // checkboxWrapper.append(checkbox, checkboxStyler)
-      listItem.append(checkbox, content);
+      checkboxWrapper.append(checkbox, checkboxStyler);
+      listItem.append(checkboxWrapper, content);
 
       Object.entries(HTMLAttributes).forEach(([key, value]) => {
         listItem.setAttribute(key, value);
@@ -199,6 +221,7 @@ export const TaskItem = Node.create<TaskItemOptions>({
 
           listItem.dataset.checked = updatedNode.attrs.checked;
           checkbox.checked = updatedNode.attrs.checked;
+          updateA11Y(updatedNode);
 
           return true;
         },
