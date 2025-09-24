@@ -25,6 +25,7 @@ import TaskList from "@tiptap/extension-task-list";
 import { TabHandler } from "../tiptap-extensions/TabHandler";
 import { MoveBlock } from "../tiptap-extensions/MoveBlock";
 import { TaskItem } from "../tiptap-extensions/TaskItem";
+import { ListTypeToggle } from "../tiptap-extensions/ListTypeToggle";
 import { disconnectDropbox, getAuthUrl, initDropbox, isDropboxInitialized } from "../services/dropbox";
 import { syncAll, syncNote } from "../services/sync";
 import { NoFocusLink } from "../tiptap-extensions/NoFocusLink";
@@ -43,7 +44,7 @@ const extensions = [
   Placeholder.configure({ placeholder: "Type something..." }),
   TaskList,
   TaskItem.configure({ nested: true }),
-  MoveBlock,
+  ListTypeToggle,
   TabHandler,
   SlashCommands,
 ];

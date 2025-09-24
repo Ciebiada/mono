@@ -6,8 +6,9 @@
 
   /* Line height styles */
   p {
-    margin: 6px 0;
-    line-height: 1.3rem;
+    margin: 0px 0;
+    padding: 4px 0;
+    line-height: 1.5rem;
   }
 
   /* Heading hierarchy styles */
@@ -56,9 +57,19 @@
   }
 
   /* List styles */
+  ul ul li::before {
+    content: "";
+    position: absolute;
+    left: calc(-48px);
+    top: 0.0em;
+    bottom: 0.0em;
+    width: 1px;
+    background: var(--list-spine-color, var(--ion-color-light-tint));
+  }
+
   ul,
   ol {
-    margin: 6px 0;
+    margin: 0;
     padding-left: 32px;
 
     ul,
@@ -73,18 +84,18 @@
 
   /* Style normal list */
   ul {
-    list-style: none;
+    /* list-style: none; */
 
     li {
       position: relative;
 
-      &::before {
+      /* &::before {
         content: "–";
         position: absolute;
         left: -16px;
         top: 0;
         color: currentColor;
-      }
+      } */
     }
   }
 
@@ -94,7 +105,7 @@
 
     li {
       &::before {
-        content: none;
+        /* content: none; */
       }
 
       position: relative;
@@ -108,7 +119,7 @@
         width: 36px;
         height: 36px;
         left: -33px;
-        top: calc(0.5lh + 1px);
+        top: calc(0.5lh + 7px);
         transform: translateY(-50%);
 
         cursor: pointer;
@@ -121,7 +132,7 @@
         content: "";
         width: 18px;
         height: 18px;
-        border: 2px solid var(--ion-color-medium-shade);
+        border: 1px solid var(--ion-color-medium-shade);
         border-radius: 100%;
         transition: all 150ms ease-out;
       }
