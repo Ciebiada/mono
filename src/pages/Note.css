@@ -60,7 +60,7 @@
   ul ul li::before {
     content: "";
     position: absolute;
-    left: calc(-48px);
+    left: -49px;
     top: 0.0em;
     bottom: 0.0em;
     width: 1px;

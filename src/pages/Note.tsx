@@ -18,7 +18,7 @@ import { debounce } from "../services/debounce";
 import { Note as NoteType } from "../services/db";
 import { Editor, EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Placeholder } from "@tiptap/extensions";
+import { Placeholder, TrailingNode } from "@tiptap/extensions";
 import "./Note.css";
 import { ellipsisHorizontalCircle } from "ionicons/icons";
 import TaskList from "@tiptap/extension-task-list";
@@ -83,6 +83,15 @@ export const Note = () => {
   const [isNoteLoaded, setIsNoteLoaded] = useState(false);
 
   const editor = useEditor({
+    immediatelyRender: false,
+    editorProps: {
+      attributes: {
+        autocomplete: "off",
+        autocorrect: "off",
+        autocapitalize: "off",
+        "aria-label": "Type something...",
+      },
+    },
     extensions,
     onSelectionUpdate: ({ editor, transaction }) => {
       // Keep cursor in view
